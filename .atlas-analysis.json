@@ -1,0 +1,41 @@
+{
+  "projectType": "general",
+  "projectName": "mise-env-fnox",
+  "projectDescription": "A mise env plugin that loads secrets from fnox into your development environment as environment variables.",
+  "theme": "aspen",
+  "primaryColor": "#040404",
+  "lightColor": "#ffffff",
+  "darkColor": null,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": ["introduction", "installation"]
+      },
+      {
+        "group": "Configuration",
+        "pages": ["configuration/options", "configuration/environments"]
+      },
+      {
+        "group": "Guides",
+        "pages": ["guides/how-it-works", "guides/caching"]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Loads fnox secrets into environment variables via mise env plugin system",
+    "Supports multiple fnox profiles (dev, staging, production)",
+    "Integrates with mise's environment-specific configuration",
+    "Supports mise environment caching (MISE_ENV_CACHE) with disk-encrypted secret storage",
+    "Watches fnox.toml for changes to automatically invalidate cache",
+    "Redacts secret values from mise output for security"
+  ],
+  "publicApiSurface": [
+    "PLUGIN:MiseEnv(ctx) — main hook called by mise to resolve and export secrets",
+    "ctx.options.fnox_bin — path to the fnox binary (default: 'fnox')",
+    "ctx.options.profile — fnox profile to use (default: 'default')",
+    "ctx.options.tools — use mise-managed tools when invoking fnox",
+    "fnox export --format json — underlying command used to retrieve secrets",
+    "fnox config-files — used to discover watch files for cache invalidation"
+  ]
+}

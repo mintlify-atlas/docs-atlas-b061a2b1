@@ -1,0 +1,34 @@
+---
+title: "Configuration options"
+description: "Reference for all options available when configuring the mise-env-fnox plugin."
+---
+
+All options are set inline in the `[env]` section of your `mise.toml` file, directly on the `_.fnox-env` directive. There is no separate configuration block.
+
+## Options
+
+<ParamField path="tools" type="boolean" default="false">
+  Use mise-managed tool paths when invoking fnox. Set this to `true` if fnox is installed via mise; otherwise mise will not resolve the binary from its toolchain.
+</ParamField>
+
+<ParamField path="profile" type="string">
+  The fnox profile to load secrets from. If not set, the `--profile` flag is omitted and fnox uses its own default profile.
+</ParamField>
+
+<ParamField path="fnox_bin" type="string" default="fnox">
+  Path to the fnox binary. Useful when fnox is not on your `PATH` or you need to point to a specific installation.
+</ParamField>
+
+## Full example
+
+```toml mise.toml
+[plugins]
+fnox-env = "https://github.com/jdx/mise-env-fnox"
+
+[env]
+_.fnox-env = { tools = true, profile = "production", fnox_bin = "/usr/local/bin/fnox" }
+```
+
+<Note>
+  Options are passed inline with the env directive, not in a separate config block. Any option you omit falls back to its default value.
+</Note>

@@ -1,0 +1,43 @@
+---
+title: Caching
+description: How mise-env-fnox uses mise's environment caching to avoid re-fetching secrets on every shell activation.
+---
+
+The plugin returns `cacheable: true` on every response, which allows mise to cache your secrets to disk and skip calling `fnox export` on subsequent shell activations. This can significantly reduce startup time, especially when your secrets provider is slow or rate-limited.
+
+## Enabling caching
+
+Caching is opt-in. Set the `MISE_ENV_CACHE` environment variable before mise activates your environment:
+
+```bash
+export MISE_ENV_CACHE=1
+```
+
+Add this to your shell's startup file (e.g. `~/.bashrc`, `~/.zshrc`) to enable it permanently.
+
+## What caching does
+
+When caching is active:
+
+- **Secrets are cached encrypted on disk.** mise stores the resolved environment variables locally so `fnox export` is not called on every new shell.
+- **Cache is automatically invalidated when `fnox.toml` changes.** The plugin registers your `fnox.toml` path as a watch file. mise detects modifications to that file and discards the cache, triggering a fresh fetch on the next activation.
+- **Cache is scoped to your shell session for security.** Cached secrets are not shared across unrelated sessions.
+
+## When the cache is not used
+
+If no `fnox.toml` is found in the current directory or any parent directory, the plugin returns an empty result immediately — there is nothing to cache, and `fnox export` is never called.
+
+## Tradeoff: upstream secret changes
+
+Cache invalidation is based on `fnox.toml` file changes, not on changes made to secrets in your upstream provider. If you rotate a secret or update a value directly in your secrets provider without modifying `fnox.toml`, the cached value will remain until you either:
+
+- Touch or edit `fnox.toml` to trigger invalidation, or
+- Disable caching (`unset MISE_ENV_CACHE`) and re-activate your environment.
+
+<Warning>
+If you rotate a secret upstream, the old cached value will continue to be used until the cache is invalidated. Make sure to touch your `fnox.toml` or clear the cache after rotating credentials.
+</Warning>
+
+<Tip>
+Caching is most useful in CI environments where shell activation happens frequently across many steps, and in projects that use slow secrets providers (such as cloud KMS or remote vaults). For local development with a fast provider, the performance difference is minimal.
+</Tip>

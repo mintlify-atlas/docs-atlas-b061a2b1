@@ -1,0 +1,68 @@
+---
+title: "Installation"
+description: "Add the mise-env-fnox plugin to your project's mise.toml to start loading fnox secrets as environment variables."
+---
+
+mise-env-fnox is installed by declaring it as a plugin in your project's `mise.toml`. mise downloads and manages the plugin automatically.
+
+<Steps>
+  <Step title="Declare the plugin in mise.toml">
+    Add the plugin under `[plugins]` and activate it under `[env]`:
+
+    ```toml mise.toml
+    [plugins]
+    fnox-env = "https://github.com/jdx/mise-env-fnox"
+
+    [env]
+    _.fnox-env = { tools = true }
+    ```
+
+    <Note>
+      `tools = true` is required when fnox is installed via mise. It tells the plugin to run fnox using mise-managed tool paths rather than relying on whatever is in your system `PATH`.
+    </Note>
+  </Step>
+  <Step title="Ensure fnox.toml exists">
+    The plugin searches for `fnox.toml` starting from the current directory and walking up to parent directories. If no config file is found, the plugin returns an empty environment and exits silently.
+
+    Make sure your project has a `fnox.toml` configured with at least one secret before proceeding.
+  </Step>
+  <Step title="Activate your environment">
+    Run any mise command. mise calls the plugin automatically and exports your secrets as environment variables:
+
+    ```bash
+    mise env
+    ```
+
+    You do not need to run the plugin manually. mise handles invocation every time it activates your project environment.
+  </Step>
+</Steps>
+
+## Examples
+
+### Default profile
+
+Use the default fnox profile:
+
+```toml mise.toml
+[plugins]
+fnox-env = "https://github.com/jdx/mise-env-fnox"
+
+[env]
+_.fnox-env = { tools = true }
+```
+
+### Custom profile
+
+Load secrets from a specific fnox profile by setting the `profile` option:
+
+```toml mise.toml
+[plugins]
+fnox-env = "https://github.com/jdx/mise-env-fnox"
+
+[env]
+_.fnox-env = { tools = true, profile = "production" }
+```
+
+<Tip>
+  You can use mise's built-in environment system to switch profiles automatically. See [Configuration options](/configuration/options) for the full list of available options, and [Environment-specific profiles](/configuration/environments) to set different profiles for dev, staging, and production.
+</Tip>

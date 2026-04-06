@@ -1,0 +1,48 @@
+---
+title: "Introduction"
+description: "mise-env-fnox is a mise env plugin that loads fnox secrets as environment variables into your development environment."
+---
+
+mise-env-fnox is a [mise](https://mise.jdx.dev) env plugin that connects to [fnox](https://github.com/jdx/fnox) and automatically exports your secrets as environment variables whenever mise activates your project environment.
+
+<Warning>
+  The author of this plugin is uncertain whether it's a good idea. fnox was built as a separate CLI for a reason. Evaluate whether this integration fits your workflow before adopting it in production.
+</Warning>
+
+## What is mise?
+
+[mise](https://mise.jdx.dev) is a dev tools manager. It manages language runtimes, CLI tools, and environment variables on a per-project basis. When you enter a project directory, mise activates the environment defined in your `mise.toml`.
+
+## What is fnox?
+
+[fnox](https://github.com/jdx/fnox) is a secrets manager. It resolves secrets from configured providers and exposes them through a CLI. Projects configure fnox through a `fnox.toml` file.
+
+## What mise-env-fnox does
+
+When mise activates your environment, this plugin runs `fnox export` and injects the resulting secrets as environment variables into your shell. You don't write `export` commands and you don't store secrets in plaintext `.env` files.
+
+The plugin:
+
+- Searches for `fnox.toml` in the current directory and parent directories
+- Runs `fnox export --format json` (with an optional `--profile` flag)
+- Exports each secret as an environment variable
+- Watches `fnox.toml` for changes to invalidate the cache
+- Redacts secret values from mise output
+
+## Prerequisites
+
+Before installing the plugin, you need:
+
+- **mise** installed and configured, version **0.3.0 or later** (the plugin's minimum required runtime version). See the [mise docs](https://mise.jdx.dev) to get started.
+- **fnox** installed and configured with a `fnox.toml` in your project directory (or a parent directory). If fnox is installed via mise, set `tools = true` in the plugin config.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Add the plugin to your mise.toml and start loading secrets.
+  </Card>
+  <Card title="Configuration options" icon="sliders" href="/configuration/options">
+    Customize the fnox binary path, profile, and tool resolution.
+  </Card>
+</CardGroup>

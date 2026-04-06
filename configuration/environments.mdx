@@ -1,0 +1,43 @@
+---
+title: "Environment-specific configuration"
+description: "Use mise environment blocks to load different fnox profiles in development, staging, and production."
+---
+
+mise supports environment-specific config blocks via `[env.<name>]` sections in `mise.toml`. You can combine this with the fnox-env plugin to load a different fnox profile for each environment.
+
+## Example
+
+The following configuration loads the `dev` profile by default and switches to `production` or `staging` when the corresponding mise environment is active:
+
+```toml mise.toml
+[plugins]
+fnox-env = "https://github.com/jdx/mise-env-fnox"
+
+[env]
+_.fnox-env = { tools = true, profile = "dev" }
+
+[env.production]
+_.fnox-env = { tools = true, profile = "production" }
+
+[env.staging]
+_.fnox-env = { tools = true, profile = "staging" }
+```
+
+## Activating an environment
+
+Set the `MISE_ENV` variable to select which environment block mise uses:
+
+```bash
+# Development (default)
+mise env
+
+# Production
+MISE_ENV=production mise env
+
+# Staging
+MISE_ENV=staging mise env
+```
+
+<Tip>
+  Keep your fnox profile names consistent with your mise environment names. For example, if your mise environment is `staging`, name the corresponding fnox profile `staging` in `fnox.toml`. This makes the mapping obvious and reduces configuration errors.
+</Tip>

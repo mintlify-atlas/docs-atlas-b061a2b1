@@ -1,0 +1,99 @@
+---
+title: How it works
+description: A step-by-step walkthrough of the secret resolution lifecycle when mise activates your project with mise-env-fnox.
+---
+
+When mise activates your project, it calls the plugin's `MiseEnv` hook. The hook discovers your fnox configuration, fetches secrets from your configured providers, and exports them as environment variables in your shell — all before your prompt appears.
+
+<Steps>
+  <Step title="mise calls the MiseEnv hook">
+    mise invokes `PLUGIN:MiseEnv(ctx)` in the plugin. The hook receives the options you set in `mise.toml` (such as `profile` and `fnox_bin`) via the `ctx.options` table.
+  </Step>
+
+  <Step title="Plugin runs `fnox config-files` to locate fnox.toml">
+    The plugin executes `fnox config-files` to discover the path(s) to your `fnox.toml` file, searching the current directory and parent directories.
+
+    ```lua
+    local function get_config_files(fnox_bin)
+        local ok, output = pcall(function()
+            return cmd.exec(fnox_bin .. " config-files")
+        end)
+        ...
+    end
+    ```
+  </Step>
+
+  <Step title="If no config files are found, the plugin exits silently">
+    If `fnox config-files` returns no paths, the plugin returns an empty result with no environment variables and no error. Your shell environment is unchanged.
+
+    ```lua
+    if #config_files == 0 then
+        return {cacheable = true, watch_files = {}, env = {}}
+    end
+    ```
+  </Step>
+
+  <Step title="Plugin runs `fnox export --format json`">
+    The plugin constructs and runs the export command. If a `profile` option is configured, it appends the `--profile` flag.
+
+    ```lua
+    local command = fnox_bin .. " export --format json"
+    if profile then
+        command = command .. " --profile " .. profile
+    end
+    ```
+  </Step>
+
+  <Step title="Plugin parses the JSON response">
+    The JSON output from `fnox export` is decoded and the `secrets` map is extracted. Each key-value pair in `secrets` becomes an environment variable.
+
+    ```lua
+    local decode_ok, data = pcall(json.decode, output)
+    ...
+    local secrets = data.secrets or {}
+
+    local env_vars = {}
+    for key, value in pairs(secrets) do
+        table.insert(env_vars, {key = key, value = value})
+    end
+    ```
+
+    The expected JSON structure from `fnox export --format json` looks like:
+
+    ```json
+    {
+      "secrets": {
+        "DATABASE_URL": "postgres://...",
+        "API_KEY": "sk-..."
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Secrets are exported as environment variables">
+    The plugin returns the collected environment variables to mise, which sets them in your shell session before your prompt appears. No manual `export` or `.env` sourcing is required.
+  </Step>
+
+  <Step title="fnox.toml is registered as a watch file">
+    The plugin returns `watch_files` containing the path(s) to your `fnox.toml`. mise monitors these files and invalidates the environment cache whenever they change, ensuring stale secrets are never served.
+  </Step>
+</Steps>
+
+## Secret redaction
+
+The plugin returns `redact: true`, which tells mise to hide secret values in its output. You will see the variable names in `mise env` output but not their values.
+
+## Error handling
+
+If `fnox config-files` or `fnox export` fails, the plugin prints a warning prefixed with `[fnox]` but does not abort the environment load. mise continues activating your environment, and the affected secrets are simply omitted.
+
+```lua
+if not ok then
+    print("[fnox] warning: `" .. command .. "` failed: " .. tostring(output))
+    return {cacheable = true, watch_files = config_files, env = {}}
+end
+```
+
+<Note>
+Warnings are printed to stdout during environment activation. If secrets are missing unexpectedly, check your terminal output for `[fnox] warning:` messages.
+</Note>
